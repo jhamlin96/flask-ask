@@ -1,17 +1,20 @@
 import unittest
-from mock import patch, MagicMock
+from unittest.mock import patch
+from mock import MagicMock
 from flask import Flask
 from flask_ask import Ask, audio
 from flask_ask.models import _Field
 
+app = Flask(__name__)
 
 class AudioUnitTests(unittest.TestCase):
 
     def setUp(self):
-        self.ask_patcher = patch('flask_ask.core.find_ask', return_value=Ask())
-        self.ask_patcher.start()
-        self.context_patcher = patch('flask_ask.models.context', return_value=MagicMock())
-        self.context_patcher.start()
+        with app.app_context():
+            self.ask_patcher = patch('flask_ask.core.find_ask', return_value=Ask())
+            self.ask_patcher.start()
+            self.context_patcher = patch('flask_ask.models.context', return_value=MagicMock())
+            self.context_patcher.start()
 
     def tearDown(self):
         self.ask_patcher.stop()

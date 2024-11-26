@@ -3,7 +3,7 @@ import unittest
 from aniso8601.timezone import UTCOffset, build_utcoffset
 from flask_ask.core import Ask
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from mock import patch, MagicMock
 import json
 
@@ -58,7 +58,7 @@ class TestCoreRoutines(unittest.TestCase):
 
         # should cause a ValueError normally
         with self.assertRaises(ValueError):
-            datetime.utcfromtimestamp(max_timestamp)
+            datetime.fromtimestamp(max_timestamp, timezone.utc).replace(tzinfo=None)
 
         # should safely parse, assuming scale change needed
         # note: this assert looks odd, but Py2 handles the parsing

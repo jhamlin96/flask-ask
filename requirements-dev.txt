@@ -1,5 +1,6 @@
 -r requirements.txt
-mock==2.0.0
-requests==2.13.0
-tox==2.7.0
+mock==5.1.0
+requests==2.32.3
+tox==4.23.2
+urllib3==2.2.3
 

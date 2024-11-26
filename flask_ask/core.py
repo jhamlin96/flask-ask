@@ -3,14 +3,14 @@ import sys
 import yaml
 import inspect
 import io
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import wraps, partial
 
 import aniso8601
-from werkzeug.contrib.cache import SimpleCache
+from cachelib import SimpleCache
 from werkzeug.local import LocalProxy, LocalStack
 from jinja2 import BaseLoader, ChoiceLoader, TemplateNotFound
-from flask import current_app, json, request as flask_request, _app_ctx_stack
+from flask import current_app, json, request as flask_request, g
 
 from . import verifier, logger
 from .convert import to_date, to_time, to_timedelta
@@ -524,47 +524,46 @@ class Ask(object):
 
     @property
     def request(self):
-        return getattr(_app_ctx_stack.top, '_ask_request', None)
+        return g.get('_ask_request')
 
     @request.setter
     def request(self, value):
-        _app_ctx_stack.top._ask_request = value
+        g._ask_request = value
 
     @property
     def session(self):
-        return getattr(_app_ctx_stack.top, '_ask_session', models._Field())
+        return g.get('_ask_session', models._Field())
 
     @session.setter
     def session(self, value):
-        _app_ctx_stack.top._ask_session = value
+        g._ask_session = value
 
     @property
     def version(self):
-        return getattr(_app_ctx_stack.top, '_ask_version', None)
+        return g.get('_ask_version')
 
     @version.setter
     def version(self, value):
-        _app_ctx_stack.top._ask_version = value
+        g._ask_version = value
 
     @property
     def context(self):
-        return getattr(_app_ctx_stack.top, '_ask_context', None)
+        return g.get('_ask_context')
 
     @context.setter
     def context(self, value):
-        _app_ctx_stack.top._ask_context = value
+        g._ask_context = value
 
     @property
     def convert_errors(self):
-        return getattr(_app_ctx_stack.top, '_ask_convert_errors', None)
+        return g.get('_ask_convert_errors')
 
     @convert_errors.setter
     def convert_errors(self, value):
-        _app_ctx_stack.top._ask_convert_errors = value
+        g._ask_convert_errors = value
 
     @property
     def current_stream(self):
-        #return getattr(_app_ctx_stack.top, '_ask_current_stream', models._Field())
         user = self._get_user()
         if user:
             stream = top_stream(self.stream_cache, user)
@@ -732,10 +731,10 @@ class Ask(object):
                 # raised by aniso8601 if raw_timestamp is not valid string
                 # in ISO8601 format
                 try:
-                    return datetime.utcfromtimestamp(timestamp)
+                    return datetime.fromtimestamp(timestamp, timezone.utc).replace(tzinfo=None)
                 except:
                     # relax the timestamp a bit in case it was sent in millis
-                    return datetime.utcfromtimestamp(timestamp/1000)
+                    return datetime.fromtimestamp(timestamp/1000, timezone.utc).replace(tzinfo=None)
 
         raise ValueError('Invalid timestamp value! Cannot parse from either ISO8601 string or UTC timestamp.')
 
